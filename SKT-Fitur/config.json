@@ -1,0 +1,243 @@
+{
+  "log": {
+    "loglevel": "warning",
+    "error": "/var/log/xray/error.log",
+    "access": "/var/log/xray/access.log"
+  },
+  "api": {
+    "services": [
+      "HandlerService",
+      "LoggerService",
+      "StatsService"
+    ],
+    "tag": "api"
+  },
+  "dns": {
+    "servers": [
+      "1.1.1.1",
+      "1.0.0.1",
+      "8.8.8.8",
+      "8.8.4.4",
+      "127.0.0.1"
+    ],
+    "tag": "dns-in"
+  },
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "inboundTag": [
+          "dns-in"
+        ],
+        "outboundTag": "dns-out"
+      },
+      {
+        "type": "field",
+        "protocol": [
+          "bittorent"
+        ],
+        "outboundTag": "block"
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 10000,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "127.0.0.1"
+      },
+      "tag": "api"
+      },
+      {
+     "listen": "127.0.0.1",
+     "port": "10001",
+     "protocol": "vless",
+      "settings": {
+          "decryption":"none",
+            "clients": [
+               {
+                 "id": "1d1c1d94-6987-4658-a4dc-8821a30fe7e0"
+#vless
+             }
+          ]
+       },
+       "streamSettings":{
+         "network": "ws",
+            "wsSettings": {
+                "path": "/vless"
+          }
+        }
+     },
+     {
+     "listen": "127.0.0.1",
+     "port": "10002",
+     "protocol": "vmess",
+      "settings": {
+            "clients": [
+               {
+                 "id": "1d1c1d94-6987-4658-a4dc-8821a30fe7e0",
+                 "alterId": 0
+#vmess
+             }
+          ]
+       },
+       "streamSettings":{
+         "network": "ws",
+            "wsSettings": {
+                "path": "/vmess"
+           }
+         }
+       },
+       {
+      "listen": "127.0.0.1",
+      "port": "10003",
+      "protocol": "trojan",
+      "settings": {
+          "decryption":"none",
+           "clients": [
+              {
+                 "password": "1d1c1d94-6987-4658-a4dc-8821a30fe7e0"
+#trojanws
+              }
+          ],
+         "udp": true
+       },
+       "streamSettings":{
+           "network": "ws",
+           "wsSettings": {
+               "path": "/trojan"
+            }
+         }
+     },
+      {
+         "listen": "127.0.0.1",
+        "port": "10004",
+        "protocol": "shadowsocks",
+        "settings": {
+           "clients": [
+           {
+           "method": "aes-128-gcm",
+          "password": "1d1c1d94-6987-4658-a4dc-8821a30fe7e0"
+#ssws
+           }
+          ],
+          "network": "tcp,udp"
+       },
+       "streamSettings":{
+          "network": "ws",
+             "wsSettings": {
+               "path": "/ss-ws"
+           }
+        }
+     },
+      {
+        "listen": "127.0.0.1",
+        "port": "10005",
+        "protocol": "vless",
+        "settings": {
+         "decryption":"none",
+           "clients": [
+             {
+               "id": "1d1c1d94-6987-4658-a4dc-8821a30fe7e0"
+#vlessgrpc
+             }
+          ]
+       },
+          "streamSettings":{
+             "network": "grpc",
+             "grpcSettings": {
+                "serviceName": "vless-service"
+           }
+        }
+     },
+     {
+      "listen": "127.0.0.1",
+      "port": "10006",
+     "protocol": "vmess",
+      "settings": {
+            "clients": [
+               {
+                 "id": "1d1c1d94-6987-4658-a4dc-8821a30fe7e0",
+                 "alterId": 0
+#vmessgrpc
+             }
+          ]
+       },
+       "streamSettings":{
+         "network": "grpc",
+            "grpcSettings": {
+                "serviceName": "vmess-service"
+          }
+        }
+     },
+     {
+        "listen": "127.0.0.1",
+        "port": "10007",
+        "protocol": "trojan",
+        "settings": {
+          "decryption":"none",
+             "clients": [
+               {
+                 "password": "1d1c1d94-6987-4658-a4dc-8821a30fe7e0"
+#trojangrpc
+               }
+           ]
+        },
+         "streamSettings":{
+         "network": "grpc",
+           "grpcSettings": {
+               "serviceName": "trojan-service"
+         }
+      }
+   },
+   {
+    "listen": "127.0.0.1",
+    "port": "10008",
+    "protocol": "shadowsocks",
+    "settings": {
+        "clients": [
+          {
+             "method": "aes-128-gcm",
+             "password": "1d1c1d94-6987-4658-a4dc-8821a30fe7e0"
+#ssgrpc 
+           }
+         ],
+           "network": "tcp,udp"
+      },
+    "streamSettings":{
+     "network": "grpc",
+        "grpcSettings": {
+           "serviceName": "ss-grpc"
+          }
+       }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "direct",
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "UseIPv4"
+      }
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole",
+      "settings": {
+        "response": {
+          "type": "http"
+        }
+      }
+    },
+    {
+      "tag": "dns-out",
+      "protocol": "dns",
+      "settings": {
+        "nonIPQuery": "skip"
+      }
+    }
+  ]
+}
